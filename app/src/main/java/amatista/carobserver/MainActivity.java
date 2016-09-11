@@ -21,12 +21,22 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.pubnub.api.PNConfiguration;
+import com.pubnub.api.PubNub;
+import com.pubnub.api.callbacks.PNCallback;
+import com.pubnub.api.models.consumer.PNErrorData;
+import com.pubnub.api.models.consumer.PNPublishResult;
+import com.pubnub.api.models.consumer.PNStatus;
+
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ResultCallback<LocationSettingsResult> {
     private GoogleApiClient mGoogleApiClient;
     private int MY_PERMISSIONS_ACCESS_FINE_LOCATION;
     private int REQUEST_CHECK_SETTINGS;
     private LocationRequest mLocationRequest;
+    private PNConfiguration pnConfiguration;
+    private PubNub pubnub;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.w("onCreate", "123");
@@ -45,10 +55,28 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Log.w("onLocationChanged", location.getLatitude() + " " + location.getLongitude() + " " + location.getSpeed());
         TextView textView = (TextView)findViewById(R.id.id_textLocation);
         textView.setText(location.getLatitude() + " " + location.getLongitude() + " " + location.getSpeed());
+        pubnub.publish()
+                .message(Arrays.asList(location.getLatitude(), location.getLongitude(), location.getSpeed(), location.getAccuracy(), location.getProvider()))
+                .channel("carobserver:position")
+                .async(new PNCallback<PNPublishResult>() {
+                    @Override
+                    public void onResponse(PNPublishResult result, PNStatus status) {
+                        if (status.isError()) {
+                            Log.w("onLocationChanged", "shiiiiet");
+                        } else {
+                            Log.w("onLocationChanged", "All good");
+                        }
+                    }
+                });
     }
 
     protected void onStart() {
         Log.w("onStart", "123");
+        pnConfiguration = new PNConfiguration();
+        pnConfiguration.setSubscribeKey("sub-c-b507301c-216b-11e6-8b91-02ee2ddab7fe");
+        pnConfiguration.setPublishKey("pub-c-53eaf64c-9df8-4ca7-9116-9ecb0d61feef");
+
+        pubnub = new PubNub(pnConfiguration);
         mGoogleApiClient.connect();
         super.onStart();
     }
