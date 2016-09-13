@@ -24,7 +24,6 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.pubnub.api.PNConfiguration;
 import com.pubnub.api.PubNub;
 import com.pubnub.api.callbacks.PNCallback;
-import com.pubnub.api.models.consumer.PNErrorData;
 import com.pubnub.api.models.consumer.PNPublishResult;
 import com.pubnub.api.models.consumer.PNStatus;
 
@@ -61,10 +60,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 .async(new PNCallback<PNPublishResult>() {
                     @Override
                     public void onResponse(PNPublishResult result, PNStatus status) {
+                        TextView textView = (TextView)findViewById(R.id.id_textPubNubInfo);
                         if (status.isError()) {
-                            Log.w("onLocationChanged", "shiiiiet");
+                            textView.setText("shiiiiet: " + status.getErrorData().getInformation());
+                            Log.w("onLocationChanged", "shiiiiet: " + status.getErrorData().getInformation());
                         } else {
-                            Log.w("onLocationChanged", "All good");
+                            textView.setText(status.getUuid());
+                            Log.w("onLocationChanged", status.getUuid());
                         }
                     }
                 });
